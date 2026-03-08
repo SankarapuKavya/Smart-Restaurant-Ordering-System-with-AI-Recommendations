@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Checkout</h2>
+
+<h3>Your Cart</h3>
+
+{% for item in cart_items %}
+
+<p>{{ item.dish.name }} - ₹{{ item.total_price }}</p>
+
+{% endfor %}
+
+<h3>Total: ₹{{ total }}</h3>
+
+<hr>
+
+<h3>Delivery Address</h3>
+
+<form method="POST" action="{% url 'place_order' %}">
+{% csrf_token %}
+
+<input type="text" name="name" placeholder="Full Name" required>
+
+<input type="text" name="phone" placeholder="Phone Number" required>
+
+
+<input type="text" name="street" placeholder="Street">
+
+<input type="text" name="city" placeholder="City">
+
+<input type="text" name="state" placeholder="State">
+
+<input type="text" name="pincode" placeholder="Pincode">
+
+<hr>
+
+<h3>Payment Method</h3>
+
+<label>
+<input type="radio" name="payment" value="gpay">
+💰 GPay
+</label>
+
+<br>
+
+<label>
+<input type="radio" name="payment" value="phonepe">
+📱 PhonePe
+</label>
+
+<br>
+
+<label>
+<input type="radio" name="payment" value="paytm">
+💳 Paytm
+</label>
+
+<br>
+
+<label>
+<input type="radio" name="payment" value="cod">
+🚚 Cash On Delivery
+</label>
+
+<br><br>
+
+<button type="submit">Place Order ✅</button>
+
+</form>
+
+{% endblock %}

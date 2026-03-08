@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>{{ restaurant.name }}</h2>
+
+<!-- Container for dishes like home page -->
+<div class="dish-container">
+
+    {% for dish in dishes %}
+    <div class="food-card">
+        {% if dish.image %}
+            <img src="{{ dish.image.url }}" alt="{{ dish.name }}">
+        {% endif %}
+
+        <h3>{{ dish.name }}</h3>
+        <p>{{ dish.description }}</p>
+        <p>💰 Price: ₹{{ dish.final_price }}</p>
+
+        <a href="{% url 'add_to_cart' dish.id %}">
+            <button>Add to Cart</button>
+        </a>
+    </div>
+    {% empty %}
+        <p>No dishes available in this restaurant.</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

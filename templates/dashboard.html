@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 style="margin-bottom:10px;">AI Food Recommendation</h2>
+
+<form method="POST" style="margin-bottom:20px;">
+    {% csrf_token %}
+    <input type="text" name="preferences"
+           placeholder="Enter preferences (spicy, low calorie, protein)"
+           style="padding:8px; width:260px;">
+    <button type="submit" style="padding:8px 14px;">Recommend</button>
+</form>
+
+<hr>
+
+{% if offers %}
+
+<h3>Available Coupons</h3>
+
+<div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap;">
+{% for offer in offers %}
+<div style="border:1px dashed green; padding:10px 15px; border-radius:8px;">
+    <b>{{ offer.code }}</b><br>
+    {{ offer.discount_percentage }}% OFF
+</div>
+{% endfor %}
+</div>
+
+<hr>
+{% endif %}
+
+<div style="display:flex; flex-wrap:wrap; gap:25px; margin-top:20px;">
+
+{% for dish, score in results %}
+
+<div style="border:1px solid #ddd;
+            padding:15px;
+            width:260px;
+            border-radius:10px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.1);
+            background:white;">
+
+```
+{% if dish.image %}
+    <img src="{{ dish.image.url }}"
+         style="width:100%; height:160px; object-fit:cover; border-radius:6px;">
+{% endif %}
+
+<h3 style="margin-top:10px;">{{ dish.name }}</h3>
+
+<p style="color:gray; font-size:14px;">
+    {{ dish.restaurant.name }}
+</p>
+
+<p style="font-size:14px;">
+    {{ dish.description|truncatewords:12 }}
+</p>
+
+
+{% if dish.discount_percentage > 0 %}
+    <p>
+        <del>₹{{ dish.price }}</del>
+        <b style="color:green;">₹{{ dish.final_price }}</b>
+        <span style="color:red;">({{ dish.discount_percentage }}% OFF)</span>
+    </p>
+{% else %}
+    <p><b>₹{{ dish.price }}</b></p>
+{% endif %}
+
+{% if dish.is_combo %}
+    <p style="color:orange;"><b>🔥 Combo Offer Available</b></p>
+{% endif %}
+
+<button style="
+    background:#ff6b00;
+    color:white;
+    border:none;
+    padding:8px 12px;
+    border-radius:6px;
+    cursor:pointer;">
+    Add to Cart
+</button>
+```
+
+</div>
+
+{% empty %}
+
+<p>No recommendations yet. Enter your preference.</p>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

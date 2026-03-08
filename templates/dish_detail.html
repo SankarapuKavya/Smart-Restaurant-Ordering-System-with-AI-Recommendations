@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>{{ dish.name }}</h2>
+
+{% if dish.image %}
+<img src="{{ dish.image.url }}" width="300">
+{% endif %}
+
+<p>₹{{ dish.price }}</p>
+
+<h3>Available Coupons</h3>
+
+<div class="coupon">
+<p>🎉 WELCOME10 - ₹50 OFF</p>
+<button onclick="applyCoupon(50)">Apply</button>
+</div>
+
+<div class="coupon">
+<p>🔥 BIRYANI20 - 20% OFF</p>
+<button onclick="applyCoupon(20)">Apply</button>
+</div>
+
+<a href="{% url 'add_to_cart' dish.id %}">
+<button>Add to Cart</button>
+</a>
+
+<script>
+
+function applyCoupon(discount){
+alert("Coupon Applied! Discount ₹"+discount);
+}
+
+</script>
+
+{% end block %}

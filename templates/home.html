@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- Search -->
+<form method="GET" action="/" class="search-form">
+    <input type="text" name="q" placeholder="Search restaurants or food..." value="{{ query|default:'' }}">
+    <button type="submit">Search 🔍</button>
+</form>
+
+<hr>
+
+<!-- Restaurants Section -->
+<h2>Restaurants</h2>
+<div class="restaurant-container">
+    {% for restaurant in restaurants %}
+    <div class="restaurant-card">
+        <a href="{% url 'restaurant_detail' restaurant.id %}">
+            {% if restaurant.image %}
+            <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }}">
+            {% endif %}
+            <h3>{{ restaurant.name }}</h3>
+            <p>{{ restaurant.location }}</p>
+            <p>{{ restaurant.cuisine }}</p>
+        </a>
+    </div>
+    {% empty %}
+    <p>No restaurants found.</p>
+    {% endfor %}
+</div>
+
+<hr>
+
+<!-- Dishes Section -->
+<h2>Dishes</h2>
+<div class="dish-container">
+    {% for dish in dishes %}
+    <div class="food-card">
+        <a href="{% url 'dish_detail' dish.id %}">
+            {% if dish.image %}
+            <img src="{{ dish.image.url }}" alt="{{ dish.name }}">
+            {% endif %}
+            <h3>{{ dish.name }}</h3>
+            <p>₹{{ dish.price }}</p>
+            <p>{{ dish.restaurant.name }}</p>
+        </a>
+        <a href="{% url 'add_to_cart' dish.id %}">
+            <button>Add To Cart</button>
+        </a>
+    </div>
+    {% empty %}
+    <p>No dishes found.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

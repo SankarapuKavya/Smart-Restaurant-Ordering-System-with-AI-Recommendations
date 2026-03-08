@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Restaurant Recommender</title>
+    <style>
+        /* --- Global Styles --- */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #ff4d4d;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .nav {
+            margin-top: 10px;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+        }
+
+        /* --- Search Form --- */
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .search-form button {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .search-form button:hover {
+            background-color: #0069d9;
+        }
+
+        /* --- Cards for Restaurants & Dishes --- */
+        .restaurant-container,
+        .dish-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .restaurant-card,
+        .food-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .restaurant-card img,
+        .food-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        /* --- Buttons --- */
+        button {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: auto; /* push button to bottom if needed */
+        }
+
+        button:hover {
+            background: #e60000;
+        }
+
+        /* Optional header links */
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        .nav form {
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🍽 AI Powered Restaurant Recommendation</h1>
+    <div class="nav">
+        {% if user.is_authenticated %}
+            <p>Welcome {{ user.username }}</p>
+            <form action="{% url 'custom_logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container">
+    {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>
