@@ -21,10 +21,36 @@
 <form method="POST" action="{% url 'place_order' %}">
 {% csrf_token %}
 
-<input type="text" name="name" placeholder="Full Name" required>
+<!-- SAVED ADDRESSES -->
 
-<input type="text" name="phone" placeholder="Phone Number" required>
+{% if addresses %}
+<h4>Select Saved Address</h4>
 
+{% for address in addresses %}
+
+<label style="display:block; margin-bottom:10px;">
+<input type="radio" name="address" value="{{ address.id }}">
+
+<strong>{{ address.name }}</strong> <br>
+{{ address.street }}, {{ address.city }} <br>
+{{ address.state }} - {{ address.pincode }} <br>
+Phone: {{ address.phone }}
+
+</label>
+
+{% endfor %}
+
+<hr>
+
+<h4>Or Add New Address</h4>
+
+{% endif %}
+
+<!-- NEW ADDRESS FORM -->
+
+<input type="text" name="name" placeholder="Full Name">
+
+<input type="text" name="phone" placeholder="Phone Number">
 
 <input type="text" name="street" placeholder="Street">
 
@@ -40,7 +66,7 @@
 
 <label>
 <input type="radio" name="payment" value="gpay">
-💰 GPay
+💰 GPay 
 </label>
 
 <br>

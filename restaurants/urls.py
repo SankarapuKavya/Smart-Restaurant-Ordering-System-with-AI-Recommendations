@@ -19,7 +19,10 @@ urlpatterns = [
 
     # Cart
     path('cart/', views.cart_view, name='cart'),
+    path('recommend/', views.recommend_view, name='recommend'),
     path('add-to-cart/<int:dish_id>/', views.add_to_cart, name='add_to_cart'),
+    path("apply-coupon/<int:offer_id>/", views.apply_coupon, name="apply_coupon"),
+    path("apply-coupon-manual/", views.apply_coupon_manual, name="apply_coupon_manual"),
     path('remove/<int:cart_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/increase/<int:cart_id>/', views.increase_quantity, name='increase_quantity'),
     path('cart/decrease/<int:cart_id>/', views.decrease_quantity, name='decrease_quantity'),

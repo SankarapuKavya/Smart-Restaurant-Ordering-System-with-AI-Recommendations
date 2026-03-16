@@ -2,14 +2,6 @@
 
 {% block content %}
 
-<!-- Search -->
-<form method="GET" action="/" class="search-form">
-    <input type="text" name="q" placeholder="Search restaurants or food..." value="{{ query|default:'' }}">
-    <button type="submit">Search 🔍</button>
-</form>
-
-<hr>
-
 <!-- Restaurants Section -->
 <h2>Restaurants</h2>
 <div class="restaurant-container">
@@ -22,6 +14,7 @@
             <h3>{{ restaurant.name }}</h3>
             <p>{{ restaurant.location }}</p>
             <p>{{ restaurant.cuisine }}</p>
+            <p>⭐ {{ restaurant.rating }}</p>
         </a>
     </div>
     {% empty %}

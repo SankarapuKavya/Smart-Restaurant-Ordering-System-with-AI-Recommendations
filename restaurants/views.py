@@ -1,6 +1,7 @@
 import os
-from django.shortcuts import render, redirect, get_object_or_404
 from datetime import date
+
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -9,14 +10,16 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import Restaurant, Dish, Offer, Cart, Order, OrderItem, Address
 from .recommendation import hybrid_recommendation
-from .utils import generate_checksum, verify_checksum  # Make sure utils.py has both
+from .utils import generate_checksum, verify_checksum
 
 
 # ===============================
 # HOME PAGE
 # ===============================
 def home(request):
+
     query = request.GET.get('q')
+
     restaurants = Restaurant.objects.all()
     dishes = Dish.objects.all()
 
@@ -50,149 +53,303 @@ def home(request):
 # RESTAURANT DETAIL
 # ===============================
 def restaurant_detail(request, id):
+
     restaurant = get_object_or_404(Restaurant, id=id)
     dishes = Dish.objects.filter(restaurant=restaurant)
-    return render(request, "restaurant_detail.html", {"restaurant": restaurant, "dishes": dishes})
+
+    return render(request, "restaurant_detail.html", {
+        "restaurant": restaurant,
+        "dishes": dishes
+    })
 
 
 # ===============================
 # DISH DETAIL
 # ===============================
 def dish_detail(request, id):
+
     dish = get_object_or_404(Dish, id=id)
-    offers = Offer.objects.filter(valid_from__lte=date.today(), valid_to__gte=date.today())
-    return render(request, "dish_detail.html", {"dish": dish, "offers": offers})
+
+    offers = Offer.objects.filter(
+        valid_from__lte=date.today(),
+        valid_to__gte=date.today()
+    )
+
+    return render(request, "dish_detail.html", {
+        "dish": dish,
+        "offers": offers
+    })
 
 
 # ===============================
 # RECOMMENDATION
 # ===============================
-@login_required(login_url='accounts/login/')
+@login_required(login_url='/accounts/login/')
 def recommend_view(request):
+
     results = []
+
     if request.method == "POST":
         preferences = request.POST.get("preferences")
         results = hybrid_recommendation(preferences)
-    return render(request, "dashboard.html", {"results": results})
+
+    return render(request, "dashboard.html", {
+        "results": results
+    })
 
 
 # ===============================
 # LOGOUT
 # ===============================
 def custom_logout(request):
+
     logout(request)
     return redirect("/")
 
 
 # ===============================
-# CART FUNCTIONS
+# ADD TO CART
 # ===============================
-@login_required(login_url='accounts/login/')
+@login_required(login_url='/accounts/login/')
 def add_to_cart(request, dish_id):
+
     dish = get_object_or_404(Dish, id=dish_id)
+
     cart_item = Cart.objects.filter(user=request.user, dish=dish).first()
+
     if cart_item:
         cart_item.quantity += 1
         cart_item.save()
     else:
         Cart.objects.create(user=request.user, dish=dish, quantity=1)
+
     return redirect("cart")
 
 
-@login_required(login_url='accounts/login/')
+# ===============================
+# APPLY COUPON BUTTON
+# ===============================
+@login_required(login_url='/accounts/login/')
+def apply_coupon(request, offer_id):
+
+    try:
+
+        offer = Offer.objects.get(
+            id=offer_id,
+            valid_from__lte=date.today(),
+            valid_to__gte=date.today()
+        )
+
+        cart_items = Cart.objects.filter(user=request.user)
+
+        item_total = sum(item.total_price() for item in cart_items)
+
+        discount = int(item_total * offer.discount_percentage / 100)
+
+        request.session["discount"] = discount
+        request.session["offer_id"] = offer.id
+
+    except Offer.DoesNotExist:
+
+        request.session["discount"] = 0
+        request.session["offer_id"] = None
+
+    return redirect("cart")
+
+
+# ===============================
+# APPLY COUPON MANUAL
+# ===============================
+@login_required(login_url='/accounts/login/')
+def apply_coupon_manual(request):
+
+    if request.method == "POST":
+
+        code = request.POST.get("coupon_code")
+
+        try:
+
+            offer = Offer.objects.get(
+                code=code,
+                valid_from__lte=date.today(),
+                valid_to__gte=date.today()
+            )
+
+            cart_items = Cart.objects.filter(user=request.user)
+
+            item_total = sum(item.total_price() for item in cart_items)
+
+            discount = int(item_total * offer.discount_percentage / 100)
+
+            request.session["discount"] = discount
+            request.session["offer_id"] = offer.id
+
+        except Offer.DoesNotExist:
+
+            request.session["discount"] = 0
+            request.session["offer_id"] = None
+
+    return redirect("cart")
+
+
+# ===============================
+# CART VIEW
+# ===============================
+@login_required(login_url='/accounts/login/')
 def cart_view(request):
+
     cart_items = Cart.objects.filter(user=request.user)
-    total = sum(item.dish.final_price() * item.quantity for item in cart_items)
+
+    item_total = sum(item.total_price() for item in cart_items)
+
     delivery_charge = 40
-    gst = total * 0.05
-    discount = 50 if total > 200 else 0
-    final_total = total + delivery_charge + gst - discount
+    gst = int(item_total * 0.05)
+
+    coupon_discount = request.session.get("discount", 0)
+
+    final_total = item_total + delivery_charge + gst - coupon_discount
+
+    if final_total < 0:
+        final_total = 0
+
+    offers = Offer.objects.filter(
+        valid_from__lte=date.today(),
+        valid_to__gte=date.today()
+    )
+
     return render(request, "cart.html", {
         "cart_items": cart_items,
-        "total": total,
+        "item_total": item_total,
         "delivery_charge": delivery_charge,
         "gst": gst,
-        "discount": discount,
-        "final_total": final_total
+        "discount": coupon_discount,
+        "final_total": final_total,
+        "offers": offers
     })
 
 
-@login_required(login_url='accounts/login/')
+# ===============================
+# REMOVE FROM CART
+# ===============================
+@login_required(login_url='/accounts/login/')
 def remove_from_cart(request, cart_id):
+
     item = get_object_or_404(Cart, id=cart_id, user=request.user)
+
     item.delete()
+
     return redirect("cart")
 
 
-@login_required(login_url='accounts/login/')
+# ===============================
+# INCREASE QUANTITY
+# ===============================
+@login_required(login_url='/accounts/login/')
 def increase_quantity(request, cart_id):
+
     item = get_object_or_404(Cart, id=cart_id, user=request.user)
+
     item.quantity += 1
     item.save()
+
     return redirect("cart")
 
 
-@login_required(login_url='accounts/login/')
+# ===============================
+# DECREASE QUANTITY
+# ===============================
+@login_required(login_url='/accounts/login/')
 def decrease_quantity(request, cart_id):
+
     item = get_object_or_404(Cart, id=cart_id, user=request.user)
+
     if item.quantity > 1:
         item.quantity -= 1
         item.save()
     else:
         item.delete()
+
     return redirect("cart")
 
 
 # ===============================
 # CHECKOUT
 # ===============================
-@login_required(login_url='accounts/login/')
+@login_required(login_url='/accounts/login/')
 def checkout(request):
+
     cart_items = Cart.objects.filter(user=request.user)
-    total = sum(item.total_price() for item in cart_items)
+
+    item_total = sum(item.total_price() for item in cart_items)
+
+    delivery_charge = 40
+    gst = int(item_total * 0.05)
+
+    coupon_discount = request.session.get("discount", 0)
+
+    total = item_total + delivery_charge + gst - coupon_discount
+
     addresses = Address.objects.filter(user=request.user)
-    request.session["total_amount"] = total
-    return render(request, "checkout.html", {"cart_items": cart_items, "total": total, "addresses": addresses})
+
+    return render(request, "checkout.html", {
+        "cart_items": cart_items,
+        "item_total": item_total,
+        "delivery_charge": delivery_charge,
+        "gst": gst,
+        "discount": coupon_discount,
+        "total": total,
+        "addresses": addresses
+    })
 
 
 # ===============================
 # PLACE ORDER
 # ===============================
-@login_required(login_url='accounts/login/')
+@login_required(login_url='/accounts/login/')
 def place_order(request):
+
     if request.method != "POST":
         return redirect("checkout")
 
-    address_id = request.POST.get("address")
-    if address_id:
-        address = Address.objects.get(id=address_id)
-    else:
-        address = Address.objects.create(
-            user=request.user,
-            name=request.POST.get("name"),
-            phone=request.POST.get("phone"),
-            street=request.POST.get("street"),
-            city=request.POST.get("city"),
-            state=request.POST.get("state"),
-            pincode=request.POST.get("pincode")
+    cart_items = Cart.objects.filter(user=request.user)
+
+    item_total = sum(item.total_price() for item in cart_items)
+
+    delivery_charge = 40
+    gst = int(item_total * 0.05)
+
+    coupon_discount = request.session.get("discount", 0)
+
+    total = item_total + delivery_charge + gst - coupon_discount
+
+    address = Address.objects.filter(user=request.user).last()
+
+    order = Order.objects.create(
+        user=request.user,
+        address=address,
+        total_price=total
+    )
+
+    for item in cart_items:
+
+        OrderItem.objects.create(
+            order=order,
+            dish=item.dish,
+            quantity=item.quantity,
+            price=item.dish.final_price()
         )
 
-    cart_items = Cart.objects.filter(user=request.user)
-    total = sum(item.total_price() for item in cart_items)
-    payment_method = request.POST.get("payment")
+    cart_items.delete()
 
-    if payment_method in ["gpay", "phonepe", "paytm"]:
-        upi_link = f"upi://pay?pa=restaurant@upi&pn=AI Restaurant&am={total}&cu=INR"
-        return render(request, "upi_redirect.html", {"upi_link": upi_link, "total": total})
+    request.session["discount"] = 0
+    request.session["offer_id"] = None
 
-    elif payment_method == "cod":
-        order = Order.objects.create(user=request.user, address=address, total_price=total)
-        for item in cart_items:
-            Cart.objects.filter(user==request.user)
-            total=sum(item.total_price() for item in cart_items)
-            OrderItem.objects.create(order=order, dish=item.dish, quantity=item.quantity, price=item.dish.final_price())
-        cart_items.delete()
-        return redirect("orders")
+    return render(request, "order_success.html")
+
+# ===============================
+# CONFIRM PAYMENT
+# ===============================
+
 @login_required(login_url='accounts/login/')
 def confirm_payment(request):
     cart_items = Cart.objects.filter(user=request.user)
@@ -274,3 +431,33 @@ def search(request):
         Q(restaurant__name__icontains=query)
     )
     return render(request, "search.html", {"dishes": dishes})
+
+# ===============================
+# ORDER HISTORY
+# ===============================
+@login_required(login_url='/accounts/login/')
+def order_history(request):
+
+    orders = Order.objects.filter(user=request.user).order_by("-created_at")
+
+    return render(request, "orders.html", {
+        "orders": orders
+    })
+
+
+# ===============================
+# SEARCH
+# ===============================
+def search(request):
+
+    query = request.GET.get("q")
+
+    dishes = Dish.objects.filter(
+        Q(name__icontains=query) |
+        Q(category__icontains=query) |
+        Q(restaurant__name__icontains=query)
+    )
+
+    return render(request, "search.html", {
+        "dishes": dishes
+    })

@@ -2,28 +2,69 @@
 
 {% block content %}
 
+<!-- Restaurant Info -->
+<div style="background:white;padding:20px;border-radius:10px;margin-bottom:20px;">
+
+{% if restaurant.image %}
+<img src="{{ restaurant.image.url }}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;">
+{% endif %}
+
 <h2>{{ restaurant.name }}</h2>
 
-<!-- Container for dishes like home page -->
+<p>📍 {{ restaurant.location }}</p>
+
+<p>🍴 {{ restaurant.cuisine }}</p>
+
+<p>⭐ {{ restaurant.rating }}</p>
+
+<p style="color:gray;">Category: {{ restaurant.category }}</p>
+
+</div>
+
+<hr>
+
+<!-- Dishes Section -->
+<h2>🍽 Available Dishes</h2>
+
 <div class="dish-container">
 
-    {% for dish in dishes %}
-    <div class="food-card">
-        {% if dish.image %}
-            <img src="{{ dish.image.url }}" alt="{{ dish.name }}">
-        {% endif %}
+{% for dish in dishes %}
 
-        <h3>{{ dish.name }}</h3>
-        <p>{{ dish.description }}</p>
-        <p>💰 Price: ₹{{ dish.final_price }}</p>
+<div class="food-card">
 
-        <a href="{% url 'add_to_cart' dish.id %}">
-            <button>Add to Cart</button>
-        </a>
-    </div>
-    {% empty %}
-        <p>No dishes available in this restaurant.</p>
-    {% endfor %}
+{% if dish.image %}
+<img src="{{ dish.image.url }}">
+{% endif %}
+
+<h3>{{ dish.name }}</h3>
+
+<p>{{ dish.description|truncatewords:10 }}</p>
+
+{% if dish.discount_percentage > 0 %}
+
+<p>
+<del>₹{{ dish.price }}</del>
+<b>₹{{ dish.final_price }}</b>
+<span style="color:red;">{{ dish.discount_percentage }}% OFF</span>
+</p>
+
+{% else %}
+
+<p>₹{{ dish.price }}</p>
+
+{% endif %}
+
+<a href="{% url 'add_to_cart' dish.id %}">
+<button>Add To Cart 🛒</button>
+</a>
+
+</div>
+
+{% empty %}
+
+<p>No dishes available.</p>
+
+{% endfor %}
 
 </div>
 

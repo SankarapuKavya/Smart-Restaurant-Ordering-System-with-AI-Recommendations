@@ -2,13 +2,15 @@
 
 {% block content %}
 
+<h2>🛒 Your Cart</h2>
+
 {% for item in cart_items %}
 
 <div class="cart-item">
 
 <h3>{{ item.dish.name }}</h3>
 
-<p>Price: ₹{{ item.dish.price }}</p>
+<p>Price: ₹{{ item.dish.final_price }}</p>
 
 <div>
 
@@ -27,7 +29,7 @@
 <br>
 
 <a href="{% url 'remove_from_cart' item.id %}">
-<button>Remove from Cart</button>
+<button>Remove</button>
 </a>
 
 <hr>
@@ -41,12 +43,63 @@
 {% endfor %}
 
 
-<h3>Total: ₹{{ final_total }}</h3>
+{% if cart_items %}
+
+<h3>Item Total: ₹{{ item_total|floatformat:0 }}</h3>
+
+<p>Delivery Charge: ₹{{ delivery_charge|floatformat:0 }}</p>
+
+<p>GST: ₹{{ gst|floatformat:0 }}</p>
+
+<p>Discount: -₹{{ discount|floatformat:0 }}</p>
+
+<hr>
+
+<h2>Final Total: ₹{{ final_total|floatformat:0 }}</h2>
+
+<hr>
+
+<h3>Available Coupons</h3>
+
+{% for offer in offers %}
+
+<div style="border:1px solid #ccc;padding:10px;margin:10px;border-radius:6px">
+
+<b>{{ offer.code }}</b>
+
+<p>{{ offer.discount_percentage }}% OFF</p>
+
+<a href="{% url 'apply_coupon' offer.id %}">
+<button>Apply</button>
+</a>
+
+</div>
+
+{% empty %}
+
+<p>No coupons available</p>
+
+{% endfor %}
+
+<hr>
+
+<h3>Have another coupon?</h3>
+
+<form method="POST" action="{% url 'apply_coupon_manual' %}">
+{% csrf_token %}
+
+<input type="text" name="coupon_code" placeholder="Enter coupon code">
+
+<button type="submit">Apply Coupon</button>
+
+</form>
 
 <br>
 
 <a href="{% url 'checkout' %}">
-<button>Proceed To Checkout 🛒</button>
+<button>Proceed To Checkout ✅</button>
 </a>
+
+{% endif %}
 
 {% endblock %}

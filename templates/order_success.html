@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="text-align:center;background:white;padding:40px;border-radius:10px;">
+
+<h2>🎉 Order Placed Successfully!</h2>
+
+<p>Your food is being prepared.</p>
+
+<p>Estimated delivery: 30 minutes 🚚</p>
+
+<br>
+
+<a href="/">
+<button>Go To Home</button>
+</a>
+
+<a href="{% url 'orders' %}">
+<button>View Orders</button>
+</a>
+
+</div>
+
+{% endblock %}
