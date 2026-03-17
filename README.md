@@ -1,4 +1,4 @@
-# AI-Powered Restaurant Recommendation System
+# Smart Restaurant Ordering System with AI Recommendation
 
 A Django-based web application that provides personalized restaurant and dish recommendations using AI, complete with search, cart, and checkout functionality.
 
@@ -31,7 +31,7 @@ A Django-based web application that provides personalized restaurant and dish re
 ---
 
  ```bash
-AI_Restaurant_Recommender/
+Smart_Restaurant_Ordering_System_with_AI_Recommendation/
 ├── config/                  
 │   ├── __init__.py
 │   ├── asgi.py
